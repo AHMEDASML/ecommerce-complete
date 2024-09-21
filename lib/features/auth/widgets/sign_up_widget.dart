@@ -1,3 +1,5 @@
+import 'dart:io';
+
 import 'package:country_code_picker/country_code_picker.dart';
 import 'package:file_picker/file_picker.dart';
 import 'package:flutter/material.dart';
@@ -47,20 +49,22 @@ class SignUpWidgetState extends State<SignUpWidget> {
   RegisterModel register = RegisterModel();
   final GlobalKey<FormState> signUpFormKey = GlobalKey<FormState>();
 
-  PlatformFile? selectedFile;
+  PlatformFile? selectedPlatformFile;
+  File? selectedFile;
   String fileName = 'commercial register';
 
   Future<void> _pickFile() async {
     FilePickerResult? result = await FilePicker.platform.pickFiles();
     if (result != null) {
       setState(() {
-        selectedFile = result.files.first;
-        register.file = selectedFile; // Ensure this assignment
-        fileName = selectedFile!.name;
+        selectedPlatformFile = result.files.first;
+        selectedFile = File(selectedPlatformFile!.path!); // تحويل PlatformFile إلى File
+        register.file = selectedFile; // تعيين selectedFile إلى register.file
+        fileName = selectedPlatformFile!.name;
       });
-      showCustomSnackBar('File selected: ${selectedFile!.name}', context, isError: false);
+      showCustomSnackBar('File selected: ${selectedPlatformFile!.name}', context, isError: false);
     } else {
-      // User canceled the picker
+      // إذا قام المستخدم بإلغاء عملية اختيار الملف
       showCustomSnackBar('No file selected', context);
     }
   }
@@ -258,9 +262,6 @@ class SignUpWidgetState extends State<SignUpWidget> {
 
 
                     const ConditionCheckBox(),
-
-
-
 
 
                     Container(margin: const EdgeInsets.all(Dimensions.marginSizeLarge), child: Hero(

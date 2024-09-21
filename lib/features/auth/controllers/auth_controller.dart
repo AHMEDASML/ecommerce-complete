@@ -1,3 +1,5 @@
+import 'dart:convert';
+
 import 'package:dio/dio.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_sixvalley_ecommerce/features/auth/domain/models/login_model.dart';
@@ -90,46 +92,57 @@ class AuthController with ChangeNotifier {
     notifyListeners();
 
     FormData formData = FormData.fromMap(register.toJson());
-
-
-    if (register.file != null) {
+    var selectedFile = register.file;
+    if (selectedFile != null) {
       formData.files.add(MapEntry(
         'file',
         await MultipartFile.fromFile(
-          register.file!.path!,
-          filename: register.file!.name,
+          selectedFile.path,
+          filename: selectedFile.path.split('/').last,
         ),
       ));
     }
 
+    var dio = Dio();
+    try {
+      var response = await dio.request(
+        'https://www.winbywin.shop/api/v1/auth/register',
+        options: Options(
+          method: 'POST',
+          headers: {
+            'Content-Type': 'multipart/form-data',
+          },
+        ),
+        data: formData,
+      );
+      _isLoading = false;
+      if (response.statusCode == 200) {
+        Map map = response.data;
+        String? temporaryToken = '', token = '', message = '';
+        try {
+          message = map["message"];
+          token = map["token"];
+          temporaryToken = map["temporary_token"];
 
-    ApiResponse apiResponse = await authServiceInterface.registration(register.toJson());
-    // ApiResponse apiResponse = await authServiceInterface.registration(formData as Map<String, dynamic>);
-
-
-
-
-    _isLoading = false;
-    if (apiResponse.response != null && apiResponse.response!.statusCode == 200) {
-      Map map = apiResponse.response!.data;
-      String? temporaryToken = '', token = '', message = '';
-      try{
-        message = map["message"];
-        token = map["token"];
-        temporaryToken = map["temporary_token"];
-      }catch(e){
-        message = null;
-        token = null;
-        temporaryToken = null;
+        } catch (e) {
+          message = null;
+          token = null;
+          temporaryToken = null;
+        }
+        if (token != null && token.isNotEmpty) {
+          await authServiceInterface.saveUserToken(token);
+          await authServiceInterface.updateDeviceToken();
+        }
+        callback(true, token, temporaryToken, message);
+        notifyListeners();
+      } else {
+        print('Error: ${response.statusMessage}');
+        ApiChecker.checkApi(response as ApiResponse);
       }
-      if(token != null && token.isNotEmpty){
-        authServiceInterface.saveUserToken(token);
-        await authServiceInterface.updateDeviceToken();
-      }
-      callback(true, token, temporaryToken, message);
-      notifyListeners();
-    }else{
-      ApiChecker.checkApi(apiResponse);
+    } catch (e) {
+      _isLoading = false;
+      print('Request failed with error: $e');
+      // ApiChecker.checkApi(e); // معالجة الأخطاء من خلال ApiChecker
     }
     notifyListeners();
   }

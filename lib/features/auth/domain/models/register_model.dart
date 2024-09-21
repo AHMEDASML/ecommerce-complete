@@ -1,3 +1,5 @@
+import 'dart:io';
+
 import 'package:file_picker/file_picker.dart';
 
 class RegisterModel {
@@ -9,7 +11,7 @@ class RegisterModel {
   String? socialId;
   String? loginMedium;
   String? referCode;
-  PlatformFile? file;
+  File? file;
 
 
   RegisterModel({this.email, this.password, this.fName, this.lName, this.socialId,this.loginMedium, this.referCode,this.file});
