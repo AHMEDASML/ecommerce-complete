@@ -1,3 +1,4 @@
+import 'package:dio/dio.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_sixvalley_ecommerce/features/auth/domain/models/login_model.dart';
 import 'package:flutter_sixvalley_ecommerce/features/auth/domain/models/register_model.dart';
@@ -87,7 +88,27 @@ class AuthController with ChangeNotifier {
   Future registration(RegisterModel register, Function callback) async {
     _isLoading = true;
     notifyListeners();
+
+    FormData formData = FormData.fromMap(register.toJson());
+
+
+    if (register.file != null) {
+      formData.files.add(MapEntry(
+        'file',
+        await MultipartFile.fromFile(
+          register.file!.path!,
+          filename: register.file!.name,
+        ),
+      ));
+    }
+
+
     ApiResponse apiResponse = await authServiceInterface.registration(register.toJson());
+    // ApiResponse apiResponse = await authServiceInterface.registration(formData as Map<String, dynamic>);
+
+
+
+
     _isLoading = false;
     if (apiResponse.response != null && apiResponse.response!.statusCode == 200) {
       Map map = apiResponse.response!.data;

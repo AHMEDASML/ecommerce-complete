@@ -36,6 +36,9 @@ class RegisterModel {
     data['social_id'] = socialId;
     data['login_medium'] = loginMedium;
     data['referral_code'] = referCode;
+    if (file != null) {
+      data['file'] = file!.path; // or convert the file to a suitable format
+    }
     return data;
   }
 }
